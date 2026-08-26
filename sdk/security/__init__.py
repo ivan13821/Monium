@@ -1,5 +1,5 @@
-from security.models import UpdateToken
-from security.token import Tokens
+from sdk.security.models import ServiceConfigData
+from sdk.security.token import Tokens
 
 
-__all__ = ["UpdateToken", "Tokens"]
+__all__ = ["ServiceConfigData", "Tokens"]
