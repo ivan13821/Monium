@@ -1,0 +1,69 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.venv*/
+venv*/
+env*/
+virtualenv/
+
+# Package management
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+*.tar.gz
+*.tgz
+.eggs/
+pip-wheel-metadata/
+share/python-wheels/
+
+# Project specific
+*.log
+*.db
+*.sqlite3
+.DS_Store
+*.pyo
+*.pyd
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# OS files
+Thumbs.db
