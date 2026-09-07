@@ -7,15 +7,8 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.resources import Resource
-from telemetry.metrics.models import CounterType, Tags, HistogramType
-import http.client as http_client
 
-http_client.HTTPConnection.debuglevel = 1
-
-# Настраиваем логирование для urllib3
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("urllib3").setLevel(logging.DEBUG)
-logging.getLogger("opentelemetry").setLevel(logging.DEBUG)
+from src.monium_sdk.telemetry.metrics.models import CounterType, Tags, HistogramType
 
 
 class MetricManager:

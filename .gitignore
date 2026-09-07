@@ -67,3 +67,4 @@ dmypy.json
 
 # OS files
 Thumbs.db
+authorized_key.json
