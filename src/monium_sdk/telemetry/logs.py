@@ -12,13 +12,13 @@ import logging
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv.resource import ResourceAttributes
 
-from src.monium_sdk.security import ApiKey
+from monium_sdk.security import ApiKey
 
 
 class LogManager:
     """Класс для работы с логами и интеграцией с Monium"""
     __MONIUM_LOGS_ENDPOINT = "https://ingest.monium.yandex.cloud/otlp/v1/logs"
-    logger_provider = None
+    logger_provider: LoggerProvider = None
     loggers: Dict[str, Any] = {}
 
     api_key: ApiKey = None
@@ -65,13 +65,12 @@ class LogManager:
         })
 
         # Настройка провайдера логов
+        if self.logger_provider is not None:
+            self.logger_provider.shutdown()
         logger_provider = LoggerProvider(resource=resource)
         logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
-        _logs.set_logger_provider(logger_provider)
 
         self.logger_provider = logger_provider
-
-
 
     def get_logger(self, name: str, level: int, has_console_handler: bool = False):
         """Получение логгера, который будет отправлять данные в Monium"""
@@ -81,28 +80,28 @@ class LogManager:
         if key in self.loggers.keys():
             return self.loggers.get(key)
 
-
         logger = logging.getLogger(key)
         logger.setLevel(level)
 
+        # ПРОВЕРКА: если провайдер не инициализирован - ошибка
+        if self.logger_provider is None:
+            raise RuntimeError("LoggerProvider не инициализирован. Сначала вызовите init_provider()")
+
+        # ✅ Используем ЛОКАЛЬНЫЙ провайдер из self
         handler = LoggingHandler(level=level, logger_provider=self.logger_provider)
         logger.addHandler(handler)
 
-        # Хандлер для консоли
         if has_console_handler:
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setLevel(level)
-
             formatter = logging.Formatter(
                 '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S'
             )
             console_handler.setFormatter(formatter)
-
             logger.addHandler(console_handler)
 
         self.loggers[key] = logger
-
         return logger
 
 

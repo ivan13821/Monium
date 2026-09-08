@@ -12,7 +12,7 @@ from aiohttp import ClientError
 from yandex.cloud.iam.v1.iam_token_service_pb2 import CreateIamTokenRequest, CreateIamTokenResponse
 from yandex.cloud.iam.v1.iam_token_service_pb2_grpc import IamTokenServiceStub
 
-from src.monium_sdk.security.models import ServiceAccountConfigData, ApiKey, IAMToken
+from monium_sdk.security.models import ServiceAccountConfigData, ApiKey, IAMToken
 
 logger = logging.getLogger(__name__)
 

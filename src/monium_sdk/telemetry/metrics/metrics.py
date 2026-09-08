@@ -1,4 +1,3 @@
-import logging
 from typing import Dict
 
 from opentelemetry import metrics
@@ -8,7 +7,8 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.resources import Resource
 
-from src.monium_sdk.telemetry.metrics.models import CounterType, Tags, HistogramType
+from monium_sdk.security import ApiKey
+from monium_sdk.telemetry.metrics.models import CounterType, Tags, HistogramType
 
 
 class MetricManager:
@@ -17,10 +17,23 @@ class MetricManager:
     _meter = None
     _counters: Dict[str, Counter] = {}
     _histograms: Dict[str, Histogram] = {}
+    provider: MeterProvider = None
+
+    api_key: ApiKey = None
+
+    project: str = None
+    cluster: str = None
+    service: str = None
 
 
 
-    def __init__(self, project: str, api_key: str, cluster: str, service: str):
+    def __init__(self, project: str, api_key: ApiKey, cluster: str, service: str):
+
+        self.project = project
+        self.cluster = cluster
+        self.service = service
+        self.api_key = api_key
+
         resource = Resource.create({
             "service.name": service,
             "cluster": cluster,
@@ -31,7 +44,7 @@ class MetricManager:
         exporter = OTLPMetricExporter(
             endpoint="https://ingest.monium.yandex.cloud/otlp/v1/metrics",
             headers={
-                "Authorization": f"Api-Key {api_key}",
+                "Authorization": f"Api-Key {api_key.secret}",
                 "x-monium-project": project,
                 "x-monium-cluster": cluster,
                 "x-monium-service": service,
@@ -45,10 +58,12 @@ class MetricManager:
             export_interval_millis=10000
         )
 
+        if self.provider is not None:
+            self.provider.shutdown()
         provider = MeterProvider(resource=resource, metric_readers=[reader])
-        metrics.set_meter_provider(provider)
+        self.provider = provider
 
-        meter = metrics.get_meter(service, "1.0.0")
+        meter = provider.get_meter(service, "1.0.0")
         self._meter = meter
 
 

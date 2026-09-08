@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import asyncio
 
 from monium_sdk.security import IAMToken, ServiceAccountConfigData
-from src.monium_sdk.security import Tokens, ApiKey  # Замените на ваш импорт
+from monium_sdk.security import Tokens, ApiKey
 
 
 class TestTokensGetApiKey(unittest.IsolatedAsyncioTestCase):

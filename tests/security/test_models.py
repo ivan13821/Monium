@@ -1,7 +1,7 @@
 
 import unittest
 from datetime import datetime, timedelta, timezone
-from src.monium_sdk.security.models import ApiKey
+from monium_sdk.security.models import ApiKey
 
 class TestApiKey(unittest.TestCase):
     """Тесты для ApiKey"""

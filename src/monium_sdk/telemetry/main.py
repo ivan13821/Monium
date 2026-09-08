@@ -1,6 +1,9 @@
-from src.monium_sdk.security import Tokens, ApiKey
-from src.monium_sdk.telemetry.logs import LogManager
-from src.monium_sdk.telemetry.metrics import MetricManager
+import asyncio
+from datetime import datetime, timezone, timedelta
+
+from monium_sdk.security import Tokens, ApiKey
+from monium_sdk.telemetry.logs import LogManager
+from monium_sdk.telemetry.metrics import MetricManager
 
 
 
@@ -13,57 +16,63 @@ class Telemetry:
         Осуществляет автоматическую ротацию API-ключей
     """
 
-    _log: LogManager
-    _metric: MetricManager
+    log: LogManager
+    metric: MetricManager
     
-    _api_key: ApiKey = None
+    _api_key: ApiKey = ApiKey(
+        created_at=datetime.now(timezone.utc) - timedelta(days=2),
+        expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        secret="",
+        key_id="",
+        scopes=set()
+    )
 
     project: str = None
     cluster: str = None
     service: str = None
 
+    _is_init: bool = False
+
     @classmethod
-    async def _check_configs(cls):
-        """Синхронная инициализация"""
+    def init(cls, forced: bool = False):
+        """Включает обновление классов с токенами и метриками"""
 
-        if None in [cls.service, cls.project, cls.cluster]:
-            raise ValueError("""
-                Не заданы конфигурационные данные для Telemetry:
-                Telemetry.project = "your project"
-                Telemetry.cluster = "your cluster"
-                Telemetry.service = "your service"
-            """)
+        if Telemetry._is_init and not forced:
+            raise RuntimeError("You cannot enable background updates more than once.")
 
-        key = await Tokens.get_api_key(["yc.monium.telemetry.write"])
+        asyncio.create_task(Telemetry._update_tokens())
 
-        if cls._api_key is not None:
-            if cls._api_key.secret == key.secret:
-                return None
 
-        cls._api_key = key
+    @classmethod
+    async def _update_tokens(cls):
 
-        cls._log = LogManager(
-            project=cls.project,
-            service=cls.service,
-            cluster=cls.cluster,
-            api_key=key
-        )
+        while True:
+            print("Проверяем токен...")
+            if not Telemetry._api_key.is_current():
+                key = await Tokens.get_api_key(["yc.monium.telemetry.write"])
+                print("Обновляю классы...")
+                if hasattr(cls, "log"):
+                    print(f"last log: \n{cls.log.api_key}")
+                cls.log = LogManager(
+                    project=cls.project,
+                    service=cls.service,
+                    cluster=cls.cluster,
+                    api_key=key
+                )
+                print(f'New log: \n{cls.log.api_key}')
 
-        cls._metric = MetricManager(
-            project=cls.project,
-            service=cls.service,
-            cluster=cls.cluster,
-            api_key=key.secret if hasattr(key, 'secret') else key
-        )
+                if hasattr(cls, "metric"):
+                    print(f"last metric: \n{cls.metric.api_key}")
+                cls.metric = MetricManager(
+                    project=cls.project,
+                    service=cls.service,
+                    cluster=cls.cluster,
+                    api_key=key
+                )
+                print(f'New metric: \n{cls.metric.api_key}')
+                cls._api_key = key
 
-    @staticmethod
-    async def get_log_manager():
-        """"""
-        await Telemetry._check_configs()
-        return Telemetry._log
+            await asyncio.sleep(30)
 
-    @staticmethod
-    async def get_metric_manager():
-        """"""
-        await Telemetry._check_configs()
-        return Telemetry._metric
+
+

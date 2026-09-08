@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 from typing import Set
-from src.monium_sdk.security import ApiKey, Tokens
+from monium_sdk.security import ApiKey, Tokens
 
 
 class TestCheckApiKey(unittest.IsolatedAsyncioTestCase):

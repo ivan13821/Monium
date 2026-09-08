@@ -1,4 +1,4 @@
-from src.monium_sdk.telemetry.logs import LogManager
+from monium_sdk.telemetry.logs import LogManager
 
 
 __all__ = ["LogManager"]
