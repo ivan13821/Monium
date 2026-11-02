@@ -27,12 +27,12 @@ class MetricManager:
 
 
 
-    def __init__(self, project: str, api_key: ApiKey, cluster: str, service: str):
+    def __init__(self, project: str, key: ApiKey, cluster: str, service: str):
 
         self.project = project
         self.cluster = cluster
         self.service = service
-        self.api_key = api_key
+        self.key = key
 
         resource = Resource.create({
             "service.name": service,
@@ -44,7 +44,7 @@ class MetricManager:
         exporter = OTLPMetricExporter(
             endpoint="https://ingest.monium.yandex.cloud/otlp/v1/metrics",
             headers={
-                "Authorization": f"Api-Key {api_key.secret}",
+                "Authorization": key.metadata,
                 "x-monium-project": project,
                 "x-monium-cluster": cluster,
                 "x-monium-service": service,

@@ -48,7 +48,6 @@ class ServiceAccountConfigData:
 class DefaultSecret:
     """Класс для описания базового поведения секретов"""
     secret: str
-    key_id: str
     created_at: datetime = field(default_factory=datetime.now)
     expires_at: datetime = field(
         default_factory=lambda: datetime.now() + timedelta(days=365)
@@ -118,6 +117,10 @@ class DefaultSecret:
 class IAMToken(DefaultSecret):
     """Модель для описания IAM токена"""
 
+    @property
+    def metadata(self) -> str:
+        return f"Bearer {self.secret}"
+
 
 @dataclass
 @total_ordering
@@ -148,6 +151,10 @@ class ApiKey(DefaultSecret):
         """
         return "|".join(sorted(list(self.scopes)))
 
+    @property
+    def metadata(self) -> str:
+        return f"Api-Key {self.secret}"
+
     def __eq__(self, other):
         if not isinstance(other, ApiKey):
             return NotImplemented
@@ -176,8 +183,4 @@ class ApiKey(DefaultSecret):
         if not isinstance(other, ApiKey):
             return NotImplemented
         return self.scopes >= other.scopes
-
-
-    def info(self):
-        return f"Идентификатор: {self.key_id} | Роли: {self.scopes}"
 

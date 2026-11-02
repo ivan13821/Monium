@@ -1,6 +1,6 @@
 # Monium
 This library is designed for working with Monium from Yandex Cloud. It provides a simplified way to write logs and metrics. Internally, it uses the OpenTelemetry protocol.
-
+This is not the official Monium library from Yandex Cloud.
 
 ## Performance
 - The library uses asynchronous calls to obtain IAM tokens and API keys. Renewal and deletion are also performed asynchronously.
@@ -14,51 +14,47 @@ Several security measures are implemented:
 3. Automatic metadata detection. If the program is running on a Yandex Cloud VM, the library automatically obtains the IAM token from the VM metadata.
 
 ## Usage
-First, configure the class for token management:
+First, you need to provide the data for connection.:
 
 ```python
-from monium_sdk.security import ServiceAccountConfigData, Tokens
+from monium_sdk.security import ApiKey, IAMToken
 
-config = ServiceAccountConfigData(
-    service_account_id="Service account ID",
-    private_key="Private key for the service account",
-    key_id="Key ID"
+key = ApiKey(
+    secret="secret"
 )
 
-# If you are using a file downloaded from Yandex Cloud, you can specify it:
+# or
 
-config_path = ServiceAccountConfigData(
-    patch="path/to/file"
+key = IAMToken(
+    secret="secret"
 )
 
-Tokens.service_account_config = config_path
+
 ```
 
 After that, you can use all the library's functionality:
 ```python
 import asyncio
 from monium_sdk import Telemetry
+from monium_sdk.security import ApiKey
 
-async def test():
+def test():
     
-    # Set configuration for log collection
-    Telemetry.project = "folder__*****"
-    Telemetry.service = "your service"
-    Telemetry.cluster = "test"
+    key = ApiKey(
+        secret="secret"
+    )
     
-    # Start the background process to refresh local providers.
-    # This is needed to update keys and tokens.
-    Telemetry.init()
-    
-    # Collect logs
-    Telemetry.log.info("msg")
-    Telemetry.log.error("msg for error")
-    
-    # Collect metrics
-    Telemetry.metric.add_to_counter()
+    with Telemetry.logging_start(
+        key=key,
+        project="folder__<folder_id>",
+        service="<service>",
+        cluster="<cluster>"
+    ) as res:
+        Telemetry.log.info("first message")
+        Telemetry.log.error("error")
+        Telemetry.metric.add_to_counter(count=5)
 
 
 if __name__ == "__main__":
-    # An active event loop is required for the library to work
-    asyncio.run(test())
+    test()
 ```

@@ -1,8 +1,8 @@
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone, timedelta
 
-from monium_sdk.security import ApiKey
+from monium_sdk.security import ApiKey, IAMToken
 from monium_sdk.telemetry.logs import LogManager
 from monium_sdk.telemetry.metrics import MetricManager
 
@@ -20,11 +20,10 @@ class Telemetry:
     log: LogManager
     metric: MetricManager
     
-    api_key: ApiKey = ApiKey(
+    key: ApiKey | IAMToken = ApiKey(
         created_at=datetime.now(timezone.utc) - timedelta(days=2),
         expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         secret="",
-        key_id="",
         scopes=set()
     )
     force_api_key: bool = False
@@ -62,35 +61,34 @@ class Telemetry:
             project=cls.project,
             service=cls.service,
             cluster=cls.cluster,
-            api_key=cls.api_key
+            key=cls.key
         )
 
         cls.metric = MetricManager(
             project=cls.project,
             service=cls.service,
             cluster=cls.cluster,
-            api_key=cls.api_key
+            key=cls.key
         )
             #
             # await asyncio.sleep(30)
 
     @classmethod
-    @asynccontextmanager
-    async def logging_start(
+    @contextmanager
+    def logging_start(
             cls,
-            api_key: ApiKey,
+            key: ApiKey | IAMToken,
             service: str,
             project: str,
             cluster: str
     ):
         try:
-            Telemetry.api_key = api_key
+            Telemetry.key = key
 
             Telemetry.service = service
             Telemetry.project = project
             Telemetry.cluster = cluster
             Telemetry._update_tokens()
-            await asyncio.sleep(3)
             yield
         finally:
             Telemetry.log.force_flush()

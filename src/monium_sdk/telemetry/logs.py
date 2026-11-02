@@ -12,7 +12,7 @@ import logging
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv.resource import ResourceAttributes
 
-from monium_sdk.security import ApiKey
+from monium_sdk.security import ApiKey, IAMToken
 
 
 class LogManager:
@@ -21,7 +21,7 @@ class LogManager:
     logger_provider: LoggerProvider = None
     loggers: Dict[str, Any] = {}
 
-    api_key: ApiKey = None
+    key: ApiKey | IAMToken = None
 
     project: str = None
     cluster: str = None
@@ -34,14 +34,14 @@ class LogManager:
             project: str,
             cluster: str,
             service: str,
-            api_key: ApiKey,
+            key: ApiKey | IAMToken,
             level: int=logging.NOTSET
     ):
         self.project = project
         self.cluster = cluster
         self.service = service
         self.level = level
-        self.api_key = api_key
+        self.key = key
         self.init_provider()
 
 
@@ -55,7 +55,7 @@ class LogManager:
         log_exporter = OTLPLogExporter(
             endpoint=self.__MONIUM_LOGS_ENDPOINT,
             headers={
-                "Authorization": f"Api-Key {self.api_key.secret}",
+                "Authorization": self.key.metadata,
                 "x-monium-project": self.project,
                 "x-monium-cluster": self.cluster,
                 "x-monium-service": self.service,
