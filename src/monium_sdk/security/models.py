@@ -1,6 +1,6 @@
 import json
-from dataclasses import dataclass
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
+from datetime import datetime, timezone, timedelta
 from functools import total_ordering
 from typing import List, Set
 
@@ -44,12 +44,15 @@ class ServiceAccountConfigData:
                 raise ValueError("Неверный формат json файла")
 
 
-@dataclass
+@dataclass()
 class DefaultSecret:
     """Класс для описания базового поведения секретов"""
-    created_at: datetime
-    expires_at: datetime
     secret: str
+    key_id: str
+    created_at: datetime = field(default_factory=datetime.now)
+    expires_at: datetime = field(
+        default_factory=lambda: datetime.now() + timedelta(days=365)
+    )
 
     def is_current(self, weight: float = 0.7, strict: bool = True) -> bool:
         """
@@ -120,8 +123,7 @@ class IAMToken(DefaultSecret):
 @total_ordering
 class ApiKey(DefaultSecret):
     """Модель для описания API ключа"""
-    scopes: Set[str] | List[str]
-    key_id: str
+    scopes: Set[str] | List[str] = field(default_factory=set)
 
     def __post_init__(self):
 
