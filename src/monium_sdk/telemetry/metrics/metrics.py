@@ -68,6 +68,10 @@ class MetricManager:
 
 
 
+    def force_flush(self):
+        self.provider.force_flush()
+
+
 
     def add_to_counter(self, name: CounterType = CounterType.REQUESTS, tags: Tags = Tags(), count: int = 1):
         """Добаление значений к счетчику"""

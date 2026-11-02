@@ -45,6 +45,10 @@ class LogManager:
         self.init_provider()
 
 
+    def force_flush(self):
+        self.logger_provider.force_flush()
+
+
 
     def init_provider(self) -> None:
 

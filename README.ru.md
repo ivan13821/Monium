@@ -12,10 +12,13 @@
 2. Ротация API-ключей. API-ключ создается с минимальными правами, которые запрашивает пользователь, также по истечению срока жизни ключа, ключ удаляется из облака и создается новый
 3. Если запуск программы происходит на ВМ Yandex Cloud, тогда библиотека автоматически получается IAM-токен из метаданных ВМ
 
+## Особенности
+ - API-ключи удаляются при ротации, так же удаляются все созданные ключи при остановки сервиса
+
 ## Использование
 Для начала нужно настроить класс для работы с токенами:
 ```python
-from monium_sdk.security import ServiceAccountConfigData, Tokens
+from monium_sdk.security import ServiceAccountConfigData
 
 config = ServiceAccountConfigData(
     service_account_id="Идентификатор сервисного аккаунта",
@@ -28,35 +31,41 @@ config = ServiceAccountConfigData(
 config_path = ServiceAccountConfigData(
     patch="путь/до/файла"
 )
-
-Tokens.service_account_config = config_path
 ```
 
 После этого вы можете использовать весь функционал библиотеки
 ```python
 import asyncio
 from monium_sdk import Telemetry
+from monium_sdk.security import ServiceAccountConfigData
 
 
-async def test():
+async def func():
+    config = ServiceAccountConfigData(
+        service_account_id="Идентификатор сервисного аккаунта",
+        private_key="Приватный ключ для сервисного аккаунта",
+        key_id="Идентификатор ключа"
+    )
     
-    # Устанавливаем конфигурационные данные для сбора логов
-    Telemetry.project = "folder__*****"
-    Telemetry.service = "your service"
-    Telemetry.cluster = "test"
+    # Если вы используете файл полученный из Yandex Cloud тогда, можете указать его:
+    config_path = ServiceAccountConfigData(
+        patch="путь/до/файла"
+    )
     
-    # Запускаем фоновый процесс обновления локальных провайдеров. Это нужно чтобы обновить ключи и токены
-    Telemetry.init()
-    
-    # Собираем логи
-    Telemetry.log.info("msg")
-    Telemetry.log.error("msg for error")
-    
-    # Собираем метрики
-    Telemetry.metric.add_to_counter()
+    async with Telemetry.logging_start(
+        config=config,
+        project="folder__b1gmr5nv5p0g395tu68e",
+        service="sdk_test",
+        cluster="test"
+    ) as res:
+        Telemetry.log.info("first message")
+        Telemetry.log.error("error")
+        Telemetry.metric.add_to_counter(count=5)
+        print("Работаем")
+        ...
 
 
 if __name__ == "__main__":
     # Для работы библиотеки, обязательно должен существовать event loop
-    asyncio.run(test())
+    asyncio.run(func())
 ```
