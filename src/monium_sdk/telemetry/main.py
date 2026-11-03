@@ -1,5 +1,4 @@
-import asyncio
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 
 from monium_sdk.security import ApiKey, IAMToken
@@ -34,28 +33,18 @@ class Telemetry:
 
     _is_init: bool = False
 
-    # @classmethod
-    # def init(cls, forced: bool = False):
-    #     """Включает обновление классов с токенами и метриками"""
-    #
-    #     if Telemetry._is_init and not forced:
-    #         raise RuntimeError("You cannot enable background updates more than once.")
-    #
-    #     asyncio.create_task(Telemetry._update_tokens())
-
-
-    # @classmethod
-    # async def shutdown(cls):
-    #     """Удаляет API-ключ и подчищает остальные зависимости"""
-    #     await ApiKeysManager.delete_all_keys_async()
-
 
     @classmethod
-    def _update_tokens(cls):
+    def update_key(cls, key: ApiKey | IAMToken = None):
 
-        # while True:
-            # if not Telemetry.api_key.is_current():
-            #     key = await ApiKeysManager.get_api_key(["yc.monium.telemetry.write"])
+        if key is not None:
+            cls.key = key
+
+        if cls.log is not None:
+            cls.log.force_flush()
+
+        if cls.metric is not None:
+            cls.metric.force_flush()
 
         cls.log = LogManager(
             project=cls.project,
@@ -70,8 +59,7 @@ class Telemetry:
             cluster=cls.cluster,
             key=cls.key
         )
-            #
-            # await asyncio.sleep(30)
+
 
     @classmethod
     @contextmanager
@@ -88,12 +76,11 @@ class Telemetry:
             Telemetry.service = service
             Telemetry.project = project
             Telemetry.cluster = cluster
-            Telemetry._update_tokens()
+            Telemetry.update_key()
             yield
         finally:
             Telemetry.log.force_flush()
             Telemetry.metric.force_flush()
-            # await Telemetry.shutdown()
 
 
 
